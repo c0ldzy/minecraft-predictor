@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html><body>
+  <h1>Pig vs Chicken</h1>
+  <input type="file" id="f" accept="image/*"/>
+  <button onclick="go()">Classify</button>
+  <pre id="out"></pre>
+  <script>
+    async function go(){
+      const f=document.getElementById('f').files[0];
+      const data=new FormData(); data.append('file',f);
+      const res=await fetch('/predict',{method:'POST',body:data});
+      const j=await res.json();
+      document.getElementById('out').innerText =
+        `pig: ${j.pig.toFixed(3)}\nchicken: ${j.chicken.toFixed(3)}`;
+    }
+  </script>
+</body></html>
