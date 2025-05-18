@@ -1,17 +1,112 @@
 <!DOCTYPE html>
-<html><body>
-  <h1>Pig vs Chicken</h1>
-  <input type="file" id="f" accept="image/*"/>
-  <button onclick="go()">Classify</button>
-  <pre id="out"></pre>
-  <script>
-    async function go(){
-      const f=document.getElementById('f').files[0];
-      const data=new FormData(); data.append('file',f);
-      const res=await fetch('/predict',{method:'POST',body:data});
-      const j=await res.json();
-      document.getElementById('out').innerText =
-        `pig: ${j.pig.toFixed(3)}\nchicken: ${j.chicken.toFixed(3)}`;
-    }
-  </script>
-</body></html>
+<html>
+<head>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+        #preview {
+            max-width: 200px;
+            margin: 20px 0;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+        }
+        .result-bar {
+            display: flex;
+            height: 40px;
+            margin: 10px 0;
+            border: 2px solid #000;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .pig-fill {
+            background: #ff69b4;
+            transition: width 0.5s ease;
+        }
+        .chicken-fill {
+            background: #fff;
+            border-left: 2px solid #000;
+        }
+        .percentage {
+            margin-top: 10px;
+            font-size: 18px;
+        }
+        button {
+            padding: 10px 20px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <h1>🐷 Pig vs Chicken 🐔</h1>
+    
+    <input type="file" id="fileInput" accept="image/*">
+    <button onclick="classifyImage()">Classify</button>
+    
+    <div id="imageContainer">
+        <img id="preview" src="#" alt="Selected image">
+    </div>
+    
+    <div id="results" style="display: none;">
+        <div class="result-bar">
+            <div class="pig-fill" style="width: 0%"></div>
+            <div class="chicken-fill" style="width: 100%"></div>
+        </div>
+        <div class="percentage">
+            <span style="color: #ff69b4">Pig: <span id="pigPercent">0%</span></span>
+            <span style="margin-left: 20px">Chicken: <span id="chickenPercent">0%</span></span>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            const reader = new FileReader();
+            reader.onload = function() {
+                const preview = document.getElementById('preview');
+                preview.src = reader.result;
+                document.getElementById('results').style.display = 'none';
+            }
+            reader.readAsDataURL(e.target.files[0]);
+        });
+
+        async function classifyImage() {
+            const file = document.getElementById('fileInput').files[0];
+            if (!file) return alert('Select some image');
+
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    body: formData
+                });
+                const results = await response.json();
+                
+                document.getElementById('results').style.display = 'block';
+                const pigWidth = Math.round(results.pig * 100);
+                const chickenWidth = Math.round(results.chicken * 100);
+                
+                document.querySelector('.pig-fill').style.width = `${pigWidth}%`;
+                document.querySelector('.chicken-fill').style.width = `${chickenWidth}%`;
+                document.getElementById('pigPercent').textContent = `${pigWidth}%`;
+                document.getElementById('chickenPercent').textContent = `${chickenWidth}%`;
+                
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error while classifying');
+            }
+        }
+    </script>
+</body>
+</html>
